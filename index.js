@@ -2,31 +2,20 @@ const pgtools = require('pgtools');
 const {Pool} = require('pg');
 const prefix = "'calima_%'";
 const ignoreDbs = ["'postgres'", "'calima'", "'calima_testes'", "'calima_qa'"];
-var config = {
-    user: 'postgres',
-    password: 'masterkey',
+const path = require('path');
+const dirpath = path.resolve(__dirname,'.env');
+require('dotenv').config({ path: dirpath });
+const metodos = require('./metodos');
+
+var db_config = {
+    user: process.env.DB_USER,
+    password: process.env.DB_PASSWORD,
     port: 5432,
     host: 'localhost',
     database: 'postgres'
 };
 
-const pool = new Pool(config);
-
-const dropDatabases = () => {
-    getDbnames().then((dbs) => {
-        dbs.map((db) => {
-            pgtools.dropdb(config, db.dbname, function (err) {
-                if (err) {
-                    console.error(db.dbname,'>>>>ERRO<<<<<',  err);
-                } else {
-                    console.log(db.dbname, ' >>>>DELETADO<<<< ');
-                }
-            });
-        });
-    }, (err) => {
-        console.log(err);
-    });
-};
+const pool = new Pool(db_config);
 
 const getDbnames = () => {
     return new Promise( (resolve, reject) => {
@@ -45,4 +34,8 @@ const getDbnames = () => {
     });
 };
 
-dropDatabases();
+exports.getDbnames = getDbnames;
+exports.dirpath = dirpath;
+exports.db_config = db_config;
+
+metodos.do(process.argv[2]);
